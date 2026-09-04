@@ -27,8 +27,9 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
-if [ "$NODE_MAJOR" -lt 20 ]; then
-  echo "Node $NODE_MAJOR is too old. Use Node 20 or 22."
+NODE_MINOR="$(node -p "process.versions.node.split('.')[1]")"
+if [ "$NODE_MAJOR" -lt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -lt 12 ]; }; then
+  echo "Node $(node -v) is too old. Use Node 22.12 or later (required by @tanstack/react-start)."
   exit 1
 fi
 

@@ -15,7 +15,7 @@ Open `http://127.0.0.1:8080`.
 
 ## Requirements
 
-- Node.js 20 or 22
+- Node.js 22.12 or later (required by `@tanstack/react-start`)
 - npm 10+
 - Optional: `XAI_API_KEY` in `.env.local` for live hunt against grok-4.6
 

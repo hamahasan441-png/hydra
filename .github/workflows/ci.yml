@@ -16,7 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["20", "22"]
+        # @tanstack/react-start requires Node >= 22.12, so 20 can't build this
+        # app. Keep the matrix ready for the next LTS once react-start supports it.
+        node: ["22"]
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +54,6 @@ jobs:
         run: npm run build
 
       - name: Upload build output
-        if: matrix.node == '22'
         uses: actions/upload-artifact@v4
         with:
           name: vercel-output
