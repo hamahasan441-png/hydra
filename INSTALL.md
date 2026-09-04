@@ -17,7 +17,11 @@ Open `http://127.0.0.1:8080`.
 
 - Node.js 22.12 or later (required by `@tanstack/react-start`)
 - npm 10+
-- Optional: `XAI_API_KEY` in `.env.local` for live hunt against grok-4.6
+- Optional: any provider API key in `.env.local` — the app auto-activates
+  the first configured one on the /providers page. See
+  [`.env.local.example`](.env.local.example) for the full list
+  (xAI, OpenAI, Anthropic, Google, OpenRouter, Groq, Mistral, Together,
+  DeepSeek, Fireworks, NVIDIA; Ollama and LM Studio need no key).
 
 ## Manual path
 
