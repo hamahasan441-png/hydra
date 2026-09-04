@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BUILTIN_PROVIDERS, type Protocol } from "@/lib/hydra/providers";
 import { targetFor, useProviders } from "@/lib/hydra/provider-store";
-import { liveProbe } from "@/lib/hydra/live";
+import { envProviderStatus, liveProbe } from "@/lib/hydra/live";
 
 export const Route = createFileRoute("/providers")({ component: ProvidersPage });
 
@@ -26,6 +26,33 @@ function ProvidersPage() {
 
   const all = useMemo(() => [...BUILTIN_PROVIDERS, ...custom], [custom]);
   const active = all.find((p) => p.id === activeId) ?? BUILTIN_PROVIDERS[0];
+
+  // Auto-select the first built-in provider whose env key is set on the
+  // server, unless the user already has a browser-side key for the current
+  // active provider. Runs once per mount: if the user manually picks a
+  // different provider afterward, we don't override that.
+  const autoSelected = useRef(false);
+  useEffect(() => {
+    if (autoSelected.current) return;
+    autoSelected.current = true;
+    envProviderStatus().then((status) => {
+      if (!status || !Array.isArray(status.order) || status.order.length === 0) return;
+      const activeHasBrowserKey = Boolean(keys[activeId]?.trim());
+      const activeHasEnvKey = Boolean(status.present[activeId]);
+      if (activeHasBrowserKey || activeHasEnvKey) return;
+      const target = status.order[0];
+      if (target && target !== activeId) setActive(target);
+    }).catch(() => {
+      // Best-effort; a failed probe leaves the persisted selection alone.
+    });
+    // Intentionally only runs on first mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [envPresent, setEnvPresent] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    envProviderStatus().then((s) => setEnvPresent(s?.present ?? {})).catch(() => {});
+  }, []);
 
   const [name, setName] = useState("Local llama.cpp");
   const [baseUrl, setBaseUrl] = useState("http://127.0.0.1:8081/v1");
@@ -66,9 +93,19 @@ function ProvidersPage() {
                 </span>
               </div>
               <p className="mt-2 truncate font-mono text-[11px] text-muted">{p.baseUrl}</p>
-              <p className="mt-1 font-mono text-[11px] text-subtle">
-                {modelByProvider[p.id] ?? p.models[0]?.id}
-              </p>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <p className="font-mono text-[11px] text-subtle">
+                  {modelByProvider[p.id] ?? p.models[0]?.id}
+                </p>
+                {(envPresent[p.id] || Boolean(keys[p.id]?.trim())) && (
+                  <span
+                    className="font-mono text-[10px] uppercase tracking-wider text-pass"
+                    title={envPresent[p.id] ? `env: ${p.envKey}` : "browser key set"}
+                  >
+                    key
+                  </span>
+                )}
+              </div>
             </button>
           );
         })}
