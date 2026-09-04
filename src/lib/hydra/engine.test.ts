@@ -43,6 +43,21 @@ describe("SeedGuard", () => {
   });
 });
 
+describe("Seed catalog integrity", () => {
+  it("has no duplicate seed ids", () => {
+    const counts = new Map<string, number>();
+    for (const s of SEEDS) counts.set(s.id, (counts.get(s.id) ?? 0) + 1);
+    const dupes = [...counts.entries()].filter(([, n]) => n > 1).map(([id]) => id);
+    assert.deepEqual(dupes, [], `duplicate seed ids: ${dupes.join(", ")}`);
+  });
+  it("every seed carries an ideal and at least one keyword", () => {
+    for (const s of SEEDS) {
+      assert.ok(s.ideal.trim().length > 0, `${s.id}: empty ideal`);
+      assert.ok(s.keywords.length > 0, `${s.id}: no keywords`);
+    }
+  });
+});
+
 describe("Mutator invert", () => {
   it("round-trips base64", () => {
     const p = SEEDS[0].prompt;
